@@ -1,14 +1,16 @@
 // BASE URL
 export const BASE_URL = "https://nexus-hub-vvqm.onrender.com";
+
 // export const BASE_URL = "http://localhost:8000";
 // ==================== AUTH APIs ====================
 export const SIGNUP_ADMIN_API = `${BASE_URL}/api/v1/auth/admin/register`;
 export const LOGIN_ADMIN_API = `${BASE_URL}/api/v1/auth/admin/login`;
 export const LOGIN_MEMBER_API = `${BASE_URL}/api/v1/auth/member/login`;
+export const CHANGE_PASSWORD_API = `${BASE_URL}/api/v1/auth/admin/change-password`;
 export const GET_USER_DETAILS_API = `${BASE_URL}/api/v1/auth`;
 export const GET_USER_COUNT_API = `${BASE_URL}/api/v1/auth/admin/getUserCount`;
 export const LOGOUT_API = `${BASE_URL}/api/v1/auth/user/logoutUser`;
-export const FORGOT_USERNAME_API = `${BASE_URL}/api/v1/auth/admin/forgetusername`;
+export const FORGOT_PASSWORD_API = `${BASE_URL}/api/v1/auth/admin/forgot-password`;
 
 // ==================== ROOM APIs ====================
 export const GET_ROOM_ID_BY_USERNAME_API = `${BASE_URL}/api/v1/rooms/getRoomIDbyUsername`;

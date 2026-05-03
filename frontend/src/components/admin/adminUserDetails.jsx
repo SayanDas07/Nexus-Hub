@@ -1,5 +1,5 @@
-import { User, Mail, Home, LogOut, CornerUpLeft, Crown, Minus } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { User as UserIcon, Mail, Home, LogOut, CornerUpLeft, Crown, Minus, Shield, BadgeCheck } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '@/redux/authSlice';
@@ -10,180 +10,155 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { GET_USER_DETAILS_API, LOGOUT_API, REMOVE_MEMBER_API } from "@/utils/constants";
-
+import { motion } from 'framer-motion';
 
 const AdminUserDetails = () => {
     const [loading, setLoading] = useState(false);
-    const [user, setUser] = useState([]);
-
+    const [user, setUser] = useState({});
     const { userId } = useParams();
-
-
     const user1 = useSelector((state) => state.auth.user);
-
     const navigate = useNavigate();
     const dispatch = useDispatch();
     let persistor = persistStore(store);
 
     const logoutHandler = async () => {
         setLoading(true);
-
-
-
         try {
             if (user1._id === userId) {
-                const res = await axios.post(
-                    `${LOGOUT_API}`,
-                    {},
-                    { withCredentials: true }
-                );
-
+                const res = await axios.post(`${LOGOUT_API}`, {}, { withCredentials: true });
                 if (res.data.success) {
                     dispatch(logout());
                     persistor.purge();
                     navigate('/login');
-                    toast.success(res.data.message);
+                    toast.success('Logged out successfully');
                 }
-
-
             } else {
-                toast.error('You are not logged in');
+                toast.error('Session mismatch');
                 navigate('/login');
             }
-
-
         } catch (error) {
-            console.error(error.response?.data?.message || 'Logout failed');
-            toast.error(error.response?.data?.message || 'Logout failed');
+            toast.error('Logout failed');
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        const handelGetUserDetails = async () => {
+        const fetchDetails = async () => {
             try {
-                const res = await axios.get(`${GET_USER_DETAILS_API}/${userId}`, {
-                    withCredentials: true
-                });
-
+                const res = await axios.get(`${GET_USER_DETAILS_API}/${userId}`, { withCredentials: true });
                 if (res.data.success) {
                     setUser(res.data.user);
-                    toast.success(res.data.message);
                 }
-
             } catch (error) {
-                console.error(error.response?.data?.message || 'Error fetching user details');
-                toast.error(error.response?.data?.message || 'Error fetching user details');
+                toast.error('Failed to load user details');
             }
         }
-
-        handelGetUserDetails();
+        fetchDetails();
     }, [userId]);
 
     const userDetails = [
-        { icon: User, label: "Username", value: user.username },
-        { icon: Mail, label: "Email", value: user.email },
-        { icon: Home, label: "Room ID", value: user.room || 'No Room Assigned' },
-        { icon: Crown, label: "Role", value: user.role }
+        { icon: UserIcon, label: "USER ID", value: user.username, color: "text-blue-600", bg: "bg-blue-100" },
+        { icon: Mail, label: "Email Address", value: user.email, color: "text-indigo-600", bg: "bg-indigo-100" },
+        { icon: Home, label: "Associated Room", value: user.room || 'No Room Assigned', color: "text-emerald-600", bg: "bg-emerald-100" },
+        { icon: Crown, label: "Account Role", value: user.role, color: "text-amber-600", bg: "bg-amber-100" }
     ];
 
-    const goToDashboard = () => {
-        window.history.back();
-    }
-
-    const handelRemoveMember = async () => {
-        const memberId = userId;
-        const roomId = user1.room;
-
-        try {
-            const res = await axios.delete(`${REMOVE_MEMBER_API}/${roomId}`, {
-                data: { memberId },
-                withCredentials: true
-            });
-
-            if (res.data.success) {
-                toast.success(res.data.message);
-                navigate(`/admin/dashboard/${roomId}`);
-            }
-        } catch (error) {
-            console.error(error.response?.data?.message || 'Error removing member');
-            toast.error(error.response?.data?.message || 'Error removing member');
-
-        }
-
-    }
+    const containerVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-white to-gray-200 p-6">
-            {/* Back Button */}
-            <button
-                onClick={goToDashboard}
-                className="fixed top-4 left-4 p-3 rounded-full bg-indigo-50 hover:bg-indigo-100 transition-all duration-300 shadow-md"
-            >
-                <CornerUpLeft className="h-5 w-5 text-indigo-600" />
-            </button>
+        <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+            {/* Consistent Top Navbar */}
+            <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md dark:bg-slate-950/80">
+                <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg transition-colors">
+                            <CornerUpLeft className="w-5 h-5 text-indigo-600" />
+                        </button>
+                        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1" />
+                        <span className="font-bold text-xl tracking-tight">Admin Profile</span>
+                    </div>
 
-            {/* Logout Button */}
-            {
-                user1._id === userId && (
-                    <Button
-                        variant="outline"
-                        className="absolute top-4 right-4 flex items-center space-x-2 px-4 py-2 rounded-full bg-red-50 hover:bg-red-100 transition-all duration-300 shadow-md"
-                        onClick={logoutHandler}
-                        disabled={loading}
-                    >
-                        <LogOut className="h-5 w-5 text-red-600" />
-                        <span className="text-red-600">{loading ? 'Logging out...' : 'Logout'}</span>
-                    </Button>
-                )
-            }
-
-            {user1._id !== userId && user.role === 'member' && (
-                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-lg">
-                    <Button
-                        variant="outline"
-                        className="flex items-center justify-center space-x-2 px-4 py-2 rounded-full bg-red-50 hover:bg-red-200 transition-all duration-300 shadow-md w-full"
-                        onClick={handelRemoveMember}
-                    >
-                        <Minus className="h-5 w-5 text-red-600" />
-                        <span className="text-red-600 font-semibold">Remove Member</span>
-                    </Button>
+                    {user1._id === userId && (
+                        <Button variant="ghost" size="icon" onClick={logoutHandler} disabled={loading} className="text-slate-500 hover:text-red-600 hover:bg-red-50">
+                            <LogOut className="w-5 h-5" />
+                        </Button>
+                    )}
                 </div>
-            )}
+            </nav>
 
+            <main className="max-w-3xl mx-auto px-4 py-12">
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={containerVariants}
+                    className="space-y-8"
+                >
+                    <header className="text-center space-y-4">
+                        <div className="relative inline-block">
+                            <div className="w-24 h-24 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-3xl flex items-center justify-center shadow-xl mb-4 mx-auto">
+                                <UserIcon className="w-12 h-12 text-white" />
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 bg-green-500 border-4 border-white dark:border-slate-950 w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
+                                <BadgeCheck className="w-5 h-5 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-3xl font-extrabold tracking-tight">Account Overview</h2>
+                        <p className="text-slate-500 dark:text-slate-400">View and manage your personal administrative details.</p>
+                    </header>
 
-
-            <div className="flex items-center justify-center min-h-full">
-                <Card className="max-w-lg w-full p-6 rounded-3xl shadow-xl bg-white">
-                    <CardHeader className="space-y-2 text-center">
-                        <CardTitle className="text-3xl font-bold text-gray-800">
-                            User Details
-                        </CardTitle>
-                        <div className="h-1 w-24 bg-indigo-500 mx-auto rounded-full" />
-                    </CardHeader>
-                    <CardContent className="grid gap-6">
-                        {userDetails.map(({ icon: Icon, label, value }) => (
-                            <div
+                    <section className="grid gap-4">
+                        {userDetails.map(({ icon: Icon, label, value, color, bg }) => (
+                            <motion.div
                                 key={label}
-                                className="flex items-center p-5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-transform duration-200 transform hover:scale-105 shadow-sm"
+                                whileHover={{ scale: 1.01 }}
+                                className="group flex items-center p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-300"
                             >
-                                <div className="p-3 bg-indigo-100 rounded-full">
-                                    <Icon className="h-6 w-6 text-indigo-600" />
+                                <div className={`p-3 ${bg} dark:bg-opacity-10 rounded-xl transition-transform group-hover:scale-110`}>
+                                    <Icon className={`h-6 w-6 ${color}`} />
                                 </div>
-                                <div className="ml-4 flex-1">
-                                    <h3 className="text-sm font-medium text-gray-500">
+                                <div className="ml-5 flex-1">
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
                                         {label}
                                     </h3>
-                                    <p className={`text-lg font-semibold text-gray-800 ${label === "Email" ? "" : "capitalize"}`}>
+                                    <p className={`text-lg font-semibold text-slate-900 dark:text-slate-100 ${label === "Email Address" ? "" : "capitalize"}`}>
                                         {value}
                                     </p>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
-                    </CardContent>
-                </Card>
-            </div>
+                    </section>
+
+                    {user1._id !== userId && user.role === 'member' && (
+                        <div className="pt-8">
+                            <Button
+                                variant="destructive"
+                                className="w-full py-6 rounded-2xl text-lg font-bold shadow-lg hover:shadow-red-500/20"
+                                onClick={async () => {
+                                    try {
+                                        const res = await axios.delete(`${REMOVE_MEMBER_API}/${user1.room}`, {
+                                            data: { memberId: userId },
+                                            withCredentials: true
+                                        });
+                                        if (res.data.success) {
+                                            toast.success('Member removed');
+                                            navigate(-1);
+                                        }
+                                    } catch (e) {
+                                        toast.error('Failed to remove member');
+                                    }
+                                }}
+                            >
+                                <Minus className="h-5 w-5 mr-2" />
+                                Remove Admin from Hub
+                            </Button>
+                        </div>
+                    )}
+                </motion.div>
+            </main>
         </div>
     );
 };

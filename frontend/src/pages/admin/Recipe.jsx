@@ -6,7 +6,7 @@ import { ChefHat, Clock, Users, Flame, Trash2, Plus, Loader2, ArrowLeft, Sparkle
 export default function RecipePage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  
+
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -16,7 +16,7 @@ export default function RecipePage() {
   const [voiceText, setVoiceText] = useState('');
   const [showVoiceInput, setShowVoiceInput] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     calories: '',
     ingredients: '',
@@ -107,7 +107,7 @@ export default function RecipePage() {
 
   const deleteRecipe = async (recipeId) => {
     if (!window.confirm('Delete this recipe?')) return;
-    
+
     try {
       const response = await fetch(`https://nexus-hub-vvqm.onrender.com/api/v1/recipes/${recipeId}`, {
         method: 'DELETE'
@@ -130,7 +130,7 @@ export default function RecipePage() {
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    
+
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
@@ -144,17 +144,17 @@ export default function RecipePage() {
       const transcript = event.results[0][0].transcript;
       setVoiceText(transcript);
       setIsListening(false);
-      
+
       await generateFromVoice(transcript);
     };
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
-      
+
       let errorMessage = 'Could not recognize speech. ';
-      
-      switch(event.error) {
+
+      switch (event.error) {
         case 'network':
           errorMessage += 'Please check your internet connection and try again.';
           break;
@@ -174,7 +174,7 @@ export default function RecipePage() {
         default:
           errorMessage += 'Please try again.';
       }
-      
+
       setVoiceText(errorMessage);
       alert(errorMessage);
     };
@@ -194,7 +194,7 @@ export default function RecipePage() {
 
   const generateFromVoice = async (text) => {
     setGenerating(true);
-    
+
     try {
       const response = await fetch(`https://nexus-hub-vvqm.onrender.com/api/v1/recipes/room/${roomId}/generate-from-voice`, {
         method: 'POST',
@@ -318,57 +318,54 @@ export default function RecipePage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="text-center py-6 sm:py-8">
               <div className="mb-6">
                 <button
                   onClick={startVoiceRecognition}
                   disabled={isListening || generating}
-                  className={`mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center transition-all shadow-2xl ${
-                    isListening 
-                      ? 'bg-gradient-to-br from-red-500 to-pink-600 animate-pulse' 
-                      : 'bg-gradient-to-br from-purple-500 to-pink-600 hover:scale-110'
-                  } ${generating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center transition-all shadow-2xl ${isListening
+                    ? 'bg-gradient-to-br from-red-500 to-pink-600 animate-pulse'
+                    : 'bg-gradient-to-br from-purple-500 to-pink-600 hover:scale-110'
+                    } ${generating ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <Mic className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
                 </button>
               </div>
-              
+
               <p className="text-gray-700 mb-4 font-medium text-sm sm:text-base">
                 {isListening ? '🎤 Listening... Speak now!' : 'Click the microphone to start'}
               </p>
-              
+
               {voiceText && !isListening && (
-                <div className={`rounded-xl p-4 shadow-md border max-w-2xl mx-auto ${
-                  voiceText.includes('Error') || voiceText.includes('Could not') || voiceText.includes('Failed')
-                    ? 'bg-red-50 border-red-200'
-                    : 'bg-white border-purple-200'
-                }`}>
+                <div className={`rounded-xl p-4 shadow-md border max-w-2xl mx-auto ${voiceText.includes('Error') || voiceText.includes('Could not') || voiceText.includes('Failed')
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-white border-purple-200'
+                  }`}>
                   <p className="text-sm text-gray-500 mb-2">
                     {voiceText.includes('Error') || voiceText.includes('Could not') || voiceText.includes('Failed')
                       ? '⚠️ Error:'
                       : 'You said:'}
                   </p>
-                  <p className={`text-base sm:text-lg ${
-                    voiceText.includes('Error') || voiceText.includes('Could not') || voiceText.includes('Failed')
-                      ? 'text-red-700'
-                      : 'text-gray-800'
-                  }`}>{voiceText}</p>
+                  <p className={`text-base sm:text-lg ${voiceText.includes('Error') || voiceText.includes('Could not') || voiceText.includes('Failed')
+                    ? 'text-red-700'
+                    : 'text-gray-800'
+                    }`}>{voiceText}</p>
                 </div>
               )}
-              
+
               {generating && (
                 <div className="mt-6 flex items-center justify-center gap-2 text-purple-600">
                   <Loader2 className="w-6 h-6 animate-spin" />
                   <span className="font-medium text-sm sm:text-base">Generating your recipe...</span>
                 </div>
               )}
-              
+
               <div className="mt-6 text-xs sm:text-sm text-gray-600 max-w-2xl mx-auto bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
                 <p className="mb-2 font-semibold text-purple-900">💡 Example Voice Command:</p>
                 <p className="italic text-gray-700">&quot;I want a healthy Italian pasta dish with chicken and vegetables, around 500 calories, medium difficulty, serves 4 people&quot;</p>
               </div>
-              
+
               <button
                 onClick={() => {
                   setShowVoiceInput(false);
@@ -400,7 +397,7 @@ export default function RecipePage() {
                     type="number"
                     placeholder="e.g., 500"
                     value={formData.calories}
-                    onChange={(e) => setFormData({...formData, calories: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
                     className="w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition bg-white text-sm sm:text-base"
                   />
                 </div>
@@ -415,7 +412,7 @@ export default function RecipePage() {
                     type="text"
                     placeholder="chicken, tomatoes, basil"
                     value={formData.ingredients}
-                    onChange={(e) => setFormData({...formData, ingredients: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, ingredients: e.target.value })}
                     className="w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition bg-white text-sm sm:text-base"
                   />
                 </div>
@@ -430,7 +427,7 @@ export default function RecipePage() {
                     type="text"
                     placeholder="e.g., Italian, Indian"
                     value={formData.cuisine}
-                    onChange={(e) => setFormData({...formData, cuisine: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, cuisine: e.target.value })}
                     className="w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition bg-white text-sm sm:text-base"
                   />
                 </div>
@@ -443,7 +440,7 @@ export default function RecipePage() {
                   </label>
                   <select
                     value={formData.difficulty}
-                    onChange={(e) => setFormData({...formData, difficulty: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
                     className="w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition bg-white text-sm sm:text-base"
                   >
                     <option value="easy">Easy</option>
@@ -462,7 +459,7 @@ export default function RecipePage() {
                     type="number"
                     placeholder="e.g., 30"
                     value={formData.prepTime}
-                    onChange={(e) => setFormData({...formData, prepTime: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, prepTime: e.target.value })}
                     className="w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition bg-white text-sm sm:text-base"
                   />
                 </div>
@@ -477,7 +474,7 @@ export default function RecipePage() {
                     type="number"
                     placeholder="e.g., 4"
                     value={formData.servings}
-                    onChange={(e) => setFormData({...formData, servings: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, servings: e.target.value })}
                     className="w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition bg-white text-sm sm:text-base"
                   />
                 </div>
@@ -492,7 +489,7 @@ export default function RecipePage() {
                     type="text"
                     placeholder="e.g., Tuscan, Punjabi"
                     value={formData.region}
-                    onChange={(e) => setFormData({...formData, region: e.target.value, isRegional: !!e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, region: e.target.value, isRegional: !!e.target.value })}
                     className="w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition bg-white text-sm sm:text-base"
                   />
                 </div>
@@ -505,7 +502,7 @@ export default function RecipePage() {
                   </label>
                   <select
                     value={formData.spiceLevel}
-                    onChange={(e) => setFormData({...formData, spiceLevel: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, spiceLevel: e.target.value })}
                     className="w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition bg-white text-sm sm:text-base"
                   >
                     <option value="mild">Mild</option>
@@ -568,9 +565,8 @@ export default function RecipePage() {
                 <div
                   key={recipe._id}
                   onClick={() => setSelectedRecipe(recipe)}
-                  className={`bg-white/90 backdrop-blur rounded-2xl shadow-md p-4 sm:p-6 cursor-pointer transition hover:shadow-xl hover:scale-[1.02] border-2 ${
-                    selectedRecipe?._id === recipe._id ? 'border-orange-500 shadow-lg' : 'border-transparent'
-                  }`}
+                  className={`bg-white/90 backdrop-blur rounded-2xl shadow-md p-4 sm:p-6 cursor-pointer transition hover:shadow-xl hover:scale-[1.02] border-2 ${selectedRecipe?._id === recipe._id ? 'border-orange-500 shadow-lg' : 'border-transparent'
+                    }`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-lg sm:text-xl font-semibold text-gray-900 pr-2">{recipe.name}</h3>

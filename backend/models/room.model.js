@@ -1,19 +1,19 @@
 import mongoose from 'mongoose';
 
 const roomSchema = new mongoose.Schema({
-  admin: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   devices: [
-    { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'Device' 
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Device'
     }
   ],
-  macAddress: [{ 
-    type: String, 
+  macAddress: [{
+    type: String,
   }],
   recipes: [
     {

@@ -10,9 +10,9 @@ export const registerDevice = async (req, res) => {
 
     const { deviceName, macAddress, ssid, password } = newDevice;
 
-    const roomId = req.roomId;
+    const { roomId } = req.params;
     console.log("req: ", req.user);
-    console.log("Room ID: ", roomId);
+    console.log("Room ID from params: ", roomId);
 
     // Validate required fields
     if (!deviceName || !macAddress || !ssid || !password) {
@@ -24,19 +24,22 @@ export const registerDevice = async (req, res) => {
     }
 
     try {
-        // Check if the room exists
+        console.log("Checking if room exists for ID:", roomId);
         const room = await Room.findById(roomId);
         if (!room) {
+            console.log("Room NOT found in database");
             return res.status(404).json({ message: "Room not found.", success: false });
         }
+        console.log("Room found:", room._id);
 
-        // Check if the device already exists
+        console.log("Checking for existing MAC Address:", macAddress);
         const existingDevice = await Device.findOne({ macAddress });
         if (existingDevice) {
+            console.log("MAC Address already exists in DB");
             return res.status(409).json({ message: "Device already exists. Please Give another proper MAC Address...", success: false });
         }
 
-        // Create a new device - renamed variable to avoid shadowing
+        console.log("Creating new device with data:", { deviceName, macAddress, ssid });
         const createdDevice = await Device.create({
             name: deviceName,
             macAddress,
@@ -45,6 +48,7 @@ export const registerDevice = async (req, res) => {
             room: roomId,
             status: "pending",
         });
+        console.log("Device created successfully:", createdDevice._id);
 
         // Define appliances to create
 

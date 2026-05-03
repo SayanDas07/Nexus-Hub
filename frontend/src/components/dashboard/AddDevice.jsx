@@ -108,7 +108,8 @@ const AddDevice = ({ onDeviceRegistered, roomId }) => {
 
 // Add PropTypes for the onAddDevice prop
 AddDevice.propTypes = {
-  onAddDevice: PropTypes.func.isRequired,
+  onDeviceRegistered: PropTypes.func.isRequired,
+  roomId: PropTypes.string.isRequired
 };
 
 export default AddDevice;

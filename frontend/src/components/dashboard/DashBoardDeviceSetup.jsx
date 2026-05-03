@@ -131,49 +131,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-sm font-medium text-gray-600">Total Devices</CardTitle>
-                  <div className="p-2 rounded-lg bg-blue-50">
-                    <Activity className="w-4 h-4 text-blue-600" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{devices.length}</div>
-                  <p className="text-xs text-gray-500 mt-1">Connected to this room</p>
-                </CardContent>
-              </Card>
 
-              <Card className="hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-sm font-medium text-gray-600">Active Devices</CardTitle>
-                  <div className="p-2 rounded-lg bg-green-50">
-                    <Power className="w-4 h-4 text-green-600" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {devices.filter(device => device.status === 'on').length}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Currently online</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-sm font-medium text-gray-600">Room Status</CardTitle>
-                  <div className="p-2 rounded-lg bg-purple-50">
-                    <ShieldCheck className="w-4 h-4 text-purple-600" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">Active</div>
-                  <p className="text-xs text-gray-500 mt-1">System operational</p>
-                </CardContent>
-              </Card>
-            </div>
 
             {/* Add Device Section */}
             <Card>

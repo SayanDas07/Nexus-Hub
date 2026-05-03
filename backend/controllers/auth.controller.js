@@ -31,9 +31,7 @@ export const registerAdmin = async (req, res) => {
     });
 
     const room = await Room.create({
-      admin: newUser._id,
-      inviteCode: generateInviteCode(),
-      inviteCodeExpiry: new Date(Date.now() + 1 * 60 * 1000)
+      admin: newUser._id
     });
 
     newUser.room = room._id;
@@ -48,7 +46,7 @@ export const registerAdmin = async (req, res) => {
     });
 
     try {
-      
+
       const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
@@ -75,7 +73,7 @@ export const registerAdmin = async (req, res) => {
 
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
-      
+
     }
 
     res.cookie('token', generateToken(newUser._id), {
@@ -91,11 +89,9 @@ export const registerAdmin = async (req, res) => {
 };
 
 export const loginAdmin = async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-
-
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ email });
   if (!user) return res.status(404).json({ message: 'User not found', success: false });
 
   const isMatch = await bcrypt.compare(password, user.password);
@@ -133,6 +129,32 @@ export const logout = (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Logout failed', error: error.message, success: false });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found', success: false });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect old password', success: false });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.status(200).json({ message: 'Password updated successfully', success: true });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ message: 'Internal server error', success: false });
   }
 };
 
@@ -189,28 +211,27 @@ export const getUserbyEmail = async (req, res) => {
   }
 };
 
-export const forgotUsername = async (req, res) => {
-  const { email, role, securityQuestion, securityAnswer } = req.body;
+export const forgotPassword = async (req, res) => {
+  const { email, securityQuestion, securityAnswer } = req.body;
 
-  if (!email || !role || !securityQuestion || !securityAnswer) {
+  if (!email || !securityQuestion || !securityAnswer) {
     return res.status(400).json({
-      message: 'Email, role, security question, and answer are required.',
+      message: 'Email, security question, and answer are required.',
       success: false
     });
   }
 
   try {
-    const user = await User.findOne({ email, role, securityQuestion });
+    const user = await User.findOne({ email, securityQuestion, role: 'admin' });
 
     if (!user) {
       return res.status(404).json({
-        message: 'No user found with the provided email, role, and security question.',
+        message: 'No user found with the provided details.',
         success: false
       });
     }
 
     const lowerCaseSecurityAnswer = securityAnswer.toLowerCase();
-
     const isAnswerValid = await bcrypt.compare(lowerCaseSecurityAnswer, user.securityAnswer);
 
     if (!isAnswerValid) {
@@ -220,15 +241,51 @@ export const forgotUsername = async (req, res) => {
       });
     }
 
+    // Generate a new temporary password
+    const tempPassword = Math.random().toString(36).substr(2, 8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Update user's password
+    user.password = hashedPassword;
+    await user.save();
+
+    // Send email with the new password
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+      }
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Nexus-Hub - Password Reset',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <h2 style="color: #333;">Password Reset Successful</h2>
+          <p>Hello,</p>
+          <p>Your password for Nexus-Hub has been reset based on your security question verification.</p>
+          <p><strong>Your New Temporary Password:</strong> <span style="font-size: 18px; color: #4CAF50; font-weight: bold;">${tempPassword}</span></p>
+          <p>Please log in and change your password as soon as possible.</p>
+          <p><a href="${process.env.FRONTEND_URL}/login" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px;">Login to Your Account</a></p>
+          <p>If you did not request this change, please contact us immediately.</p>
+          <p>Thank you,<br>The Nexus-Hub Team</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+
     return res.status(200).json({
-      username: user.username,
       success: true,
-      message: 'Username retrieved successfully.'
+      message: 'A new password has been sent to your email.'
     });
   } catch (error) {
-    console.error('Error retrieving username:', error);
+    console.error('Error resetting password:', error);
     return res.status(500).json({
-      message: 'An error occurred while retrieving the username.',
+      message: 'An error occurred while resetting the password.',
       success: false
     });
   }

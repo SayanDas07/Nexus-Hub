@@ -9,19 +9,18 @@ import { Lock, User, Loader2, Mail, Users, Shield, BadgeCheck, AlertCircle, Chec
 import { useDispatch } from 'react-redux';
 import { login } from '@/redux/authSlice';
 import { toast, Toaster } from 'sonner';
-import { LOGIN_ADMIN_API, FORGOT_USERNAME_API } from '@/utils/constants';
+import { LOGIN_ADMIN_API, FORGOT_PASSWORD_API } from '@/utils/constants';
 import logo from '../../assets/logo.webp';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('admin');
+  const [password, setPassword] = useState('');
+  const [forgotEmail, setForgotEmail] = useState('');
   const [securityQuestion, setSecurityQuestion] = useState('');
   const [securityAnswer, setSecurityAnswer] = useState('');
   const [loading, setLoading] = useState(false);
-  const [forgotUsernameLoading, setForgotUsernameLoading] = useState(false);
-  const [showForgotUsername, setShowForgotUsername] = useState(false);
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -32,7 +31,7 @@ const Login = () => {
     try {
       const res = await axios.post(
         `${LOGIN_ADMIN_API}`,
-        { username, password },
+        { email, password },
         { withCredentials: true }
       );
 
@@ -84,7 +83,7 @@ const Login = () => {
         duration: 5000,
         position: "top-center",
         icon: <AlertCircle className="h-5 w-5 text-red-500" />,
-        description: errorDetail || 'Please check your username and password',
+        description: errorDetail || 'Please check your email and password',
         action: {
           label: 'Dismiss',
           onClick: () => toast.dismiss()
@@ -101,25 +100,24 @@ const Login = () => {
     }
   };
 
-  const handleForgotUsername = async (e) => {
+  const handleForgotPassword = async (e) => {
     e.preventDefault();
-    setForgotUsernameLoading(true);
+    setForgotPasswordLoading(true);
 
     try {
-      const res = await axios.post(`${FORGOT_USERNAME_API}`, {
-        email,
-        role,
+      const res = await axios.post(`${FORGOT_PASSWORD_API}`, {
+        email: forgotEmail,
         securityQuestion,
         securityAnswer,
       });
 
       if (res.data.success) {
-        // Enhanced success toast for username retrieval
-        toast.success('Username Retrieved!', {
+        // Enhanced success toast for password reset
+        toast.success('Password Reset Successful!', {
           duration: 4000,
           position: "top-center",
           icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-          description: `Your username is: ${res.data.username}`,
+          description: res.data.message,
           className: "border-l-4 border-green-500 bg-white",
           style: {
             padding: '16px',
@@ -127,8 +125,9 @@ const Login = () => {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
           }
         });
+        setShowForgotPassword(false);
       } else {
-        toast.error(res.data.message || 'Failed to retrieve username', {
+        toast.error(res.data.message || 'Failed to reset password', {
           duration: 5000,
           position: "top-center",
           icon: <AlertCircle className="h-5 w-5 text-red-500" />,
@@ -144,7 +143,7 @@ const Login = () => {
     } catch (error) {
       const errorDetail = error.response?.data?.detail || '';
 
-      toast.error(error.response?.data?.message || 'Error retrieving username', {
+      toast.error(error.response?.data?.message || 'Error resetting password', {
         duration: 5000,
         position: "top-center",
         icon: <AlertCircle className="h-5 w-5 text-red-500" />,
@@ -161,7 +160,7 @@ const Login = () => {
         }
       });
     } finally {
-      setForgotUsernameLoading(false);
+      setForgotPasswordLoading(false);
     }
   };
 
@@ -188,20 +187,20 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!showForgotUsername ? (
+            {!showForgotPassword ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="email">Email</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                       className="pl-9"
-                      placeholder="Enter your username"
+                      placeholder="Enter your registered email"
                     />
                   </div>
                 </div>
@@ -241,9 +240,9 @@ const Login = () => {
                   <Button
                     variant="link"
                     className="font-medium"
-                    onClick={() => setShowForgotUsername(true)}
+                    onClick={() => setShowForgotPassword(true)}
                   >
-                    Forgot Username?
+                    Forgot Password?
                   </Button>
 
                   <div className="mt-2">
@@ -259,7 +258,7 @@ const Login = () => {
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleForgotUsername} className="space-y-4">
+              <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
@@ -267,8 +266,8 @@ const Login = () => {
                     <Input
                       id="email"
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
                       required
                       className="pl-9"
                       placeholder="Enter your email"
@@ -276,22 +275,7 @@ const Login = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <select
-                      id="role"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      required
-                      className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-300"
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="member">Member</option>
-                    </select>
-                  </div>
-                </div>
+
 
                 <div className="space-y-2">
                   <Label htmlFor="securityQuestion">Security Question</Label>
@@ -340,15 +324,15 @@ const Login = () => {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={forgotUsernameLoading}
+                  disabled={forgotPasswordLoading}
                 >
-                  {forgotUsernameLoading ? (
+                  {forgotPasswordLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Retrieving username...
+                      Resetting password...
                     </>
                   ) : (
-                    'Retrieve Username'
+                    'Reset Password'
                   )}
                 </Button>
 
@@ -356,7 +340,7 @@ const Login = () => {
                   <Button
                     variant="link"
                     className="font-medium"
-                    onClick={() => setShowForgotUsername(false)}
+                    onClick={() => setShowForgotPassword(false)}
                   >
                     Back to Login
                   </Button>
